@@ -1,2 +1,2 @@
 # SST
-GUI for timing summoner spells in League of Legends
+Simple GUI for timing summoner spells (w/ auditory cues + "clipboard" funcationality) in League of Legends

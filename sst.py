@@ -18,6 +18,20 @@ import time
 
 # why does it insta start q'ing up all roles sounds
 
+# SHOULD probably make all top through supp vars into lists and go off of index (assuming they are declared with the same vars)
+# BIG issue btw! -> after deleting summs (and tabbing out to time them again quickly i think is the big thing?),
+#                   it records the first summ, but glitches out on the second. I believe the chat is still open at the end
+
+# potential solut9ion: add a left click after the tab back in to bring to focus
+
+# what is reasonable scenario here: alt-tab back into league,
+                                #   opens chat, types ad thing, closes chat
+                                #   bugs on opening chat here?, types anyway, opens chat
+                                #       maybe look into how hard it would be to make same time timers one action to make + delete
+                                #       could be a cool loophole1
+
+# make it so roles that have active timers have darker backgrounds for the buttons, pretty simple
+
 # this was potentially defined as a static method, what is that and why would that be an issue. was def inside class b4
 def summ_rounder(t_var, other):
     if 53 <= other % 60 <= 59:
@@ -40,6 +54,7 @@ class Window(Frame):
         time.sleep(.25)
 
         # bringing up chat
+        self.keyboard.press(kb.Key.enter)
         self.keyboard.press(kb.Key.enter)
         #time.sleep(.001)
         #self.keyboard.release(kb.Key.enter)
@@ -78,6 +93,7 @@ class Window(Frame):
     def del_summs_scrpt(self):
 
         # bringing up chat
+        self.keyboard.press(kb.Key.enter)
         self.keyboard.press(kb.Key.enter)
         #time.sleep(.001)
         #self.keyboard.release(kb.Key.enter)
@@ -127,11 +143,14 @@ class Window(Frame):
         self.a_sw = Stopwatch().reset()
         self.s_sw = Stopwatch().reset()
 
-        self.top_ci = IntVar()
-        self.jg_ci = IntVar()
-        self.mid_ci = IntVar()
-        self.ad_ci = IntVar()
-        self.supp_ci = IntVar()
+        # i guess you need to declare these afterthe root=Tk() statement, weird, think of clear way to do this?
+        # just instantiate these vars up here, no declaration, and then add the IntVars on in the main method.
+
+        self.top_ci = IntVar(master)
+        self.jg_ci = IntVar(master)
+        self.mid_ci = IntVar(master)
+        self.ad_ci = IntVar(master)
+        self.supp_ci = IntVar(master)
 
         self.summs_list = [self.t_sw, self.j_sw, self.m_sw, self.a_sw, self.s_sw]
         self.ci_list = [self.top_ci, self.jg_ci, self.mid_ci, self.ad_ci, self.supp_ci]
@@ -145,47 +164,47 @@ class Window(Frame):
         supp_img = ImageTk.PhotoImage(Image.open("extras/supp.png"))
 
         # maybe figure out why the scaling on this is so weird
-        self.tButton = Button(self, height=50,image=top_img, command=self.swtch_top)
+        self.tButton = Button(self, height=50, width=75, image=top_img, command=self.swtch_top)
         self.tButton.image = top_img
-        self.tButton.grid(row=0, column=0,  sticky=W+E, padx=5, pady=(5, 1))
+        self.tButton.grid(row=0, column=1, columnspan=3, sticky=W+E, padx=5, pady=(5, 1))
 
         self.jButton = Button(self, width=10, height=50, image=jg_img, command=self.swtch_jg)
         self.jButton.image = jg_img
-        self.jButton.grid(row=1, column=0,  sticky=W+E, padx=5, pady=1)
+        self.jButton.grid(row=1, column=1, columnspan=3, sticky=W+E, padx=5, pady=1)
 
         self.mButton = Button(self, width=10, height=50, image=mid_img, command=self.swtch_mid)
         self.mButton.image = mid_img
-        self.mButton.grid(row=2, column=0, sticky=W+E, padx=5, pady=1)
+        self.mButton.grid(row=2, column=1, columnspan=3, sticky=W+E, padx=5, pady=1)
 
         self.aButton = Button(self, width=10, height=50, image=ad_img, command=self.swtch_ad)
         self.aButton.image = ad_img
-        self.aButton.grid(row=3, column=0, sticky=W+E, padx=5, pady=1)
+        self.aButton.grid(row=3, column=1, columnspan=3, sticky=W+E, padx=5, pady=1)
 
         self.sButton = Button(self, width=10, height=50, image=supp_img, command=self.swtch_supp)
         self.sButton.image = supp_img
-        self.sButton.grid(row=4, column=0, sticky=W+E, padx=5)
+        self.sButton.grid(row=4, column=1, columnspan=3, sticky=W+E, padx=5)
 
-        self.cosmic_gui_label = Label(self, text="CI:")
-        self.cosmic_gui_label.grid(row=5, column=0)
+        #self.cosmic_gui_label = Label(self, text="CI:", width=1)
+        #self.cosmic_gui_label.grid(row=5, column=0)
 
         self.add15Button = Button(self, width=8, height=3, text="+15", command=self.swtch15)
-        self.add15Button.grid(row=0, column=1, columnspan=2, sticky=E, pady=(5, 1))
+        self.add15Button.grid(row=0, column=6, columnspan=2, sticky=E, pady=(5, 1))
         self.add30Button = Button(self, width=8, height=3, text="+30", command=self.swtch30)
-        self.add30Button.grid(row=2, column=1, columnspan=2, sticky=E, pady=1)
+        self.add30Button.grid(row=2, column=6, columnspan=2, sticky=E, pady=1)
         self.add45Button = Button(self, width=8, height=3, text="+45", command=self.swtch45)
-        self.add45Button.grid(row=4, column=1, columnspan=2, sticky=E, pady=1)
+        self.add45Button.grid(row=4, column=6, columnspan=2, sticky=E, pady=1)
 
         # ci stuff (change here)
-        self.t_ci = Checkbutton(self, text="T", variable=self.top_ci, onvalue=285, offvalue=300)
-        self.t_ci.grid(row=5, column=1)
-        self.j_ci = Checkbutton(self, text="J", variable=self.jg_ci, onvalue=285, offvalue=300)
-        self.j_ci.grid(row=5, column=2)
-        self.m_ci = Checkbutton(self, text="M", variable=self.mid_ci, onvalue=285, offvalue=300)
-        self.m_ci.grid(row=5, column=3)
-        self.a_ci = Checkbutton(self, text="A", variable=self.ad_ci, onvalue=285, offvalue=300)
-        self.a_ci.grid(row=5, column=4)
-        self.s_ci = Checkbutton(self, text="S", variable=self.supp_ci, onvalue=285, offvalue=300)
-        self.s_ci.grid(row=5, column=5)
+        self.t_ci = Checkbutton(self, variable=self.top_ci, onvalue=285, offvalue=300)
+        self.t_ci.grid(row=0, column=0, pady=(5,1))
+        self.j_ci = Checkbutton(self, variable=self.jg_ci, onvalue=285, offvalue=300)
+        self.j_ci.grid(row=1, column=0)
+        self.m_ci = Checkbutton(self, variable=self.mid_ci, onvalue=285, offvalue=300)
+        self.m_ci.grid(row=2, column=0)
+        self.a_ci = Checkbutton(self, variable=self.ad_ci, onvalue=285, offvalue=300)
+        self.a_ci.grid(row=3, column=0)
+        self.s_ci = Checkbutton(self, variable=self.supp_ci, onvalue=285, offvalue=300)
+        self.s_ci.grid(row=4, column=0)
 
         self.game_sw = Stopwatch()
 
@@ -198,7 +217,7 @@ class Window(Frame):
         self.s_copied = False
 
         self.game_gui_label = Label(self, text="Game Timer:")
-        self.game_gui_label.grid(row=6, column=0)
+        self.game_gui_label.grid(row=6, column=3, ipadx=20)
 
         self.actual_game_time = 0
 
@@ -206,7 +225,7 @@ class Window(Frame):
 
         self.game_timer = Entry(self, width=10)
         self.game_timer.insert(END, '0')
-        self.game_timer.grid(row=6, column=1, columnspan=3, pady=5)
+        self.game_timer.grid(row=6, column=5, columnspan=3, pady=5)
         self.game_timer.bind("<Return>", self.retrieve_input)
 
         #self.delay_val = Entry(self, width=5)
@@ -239,6 +258,8 @@ class Window(Frame):
         self.mid_string = ''
         self.ad_string = ''
         self.supp_string = ''
+
+        self.newest_iteration = ''
 
         # whether or not button is selected currently
         self.topBool = False
@@ -347,81 +368,107 @@ class Window(Frame):
         if self.topBool:
             self.apply_delay(0)
             self.t_sw.restart()
-            self.tButton.configure(bg="SystemButtonFace")
+            self.tButton.configure(bg="darkgray")
             self.topBool = False
         if self.jgBool:
             self.apply_delay(1)
             self.j_sw.restart()
-            self.jButton.configure(bg="SystemButtonFace")
+            self.jButton.configure(bg="darkgray")
             self.jgBool = False
         if self.midBool:
             self.apply_delay(2)
             self.m_sw.restart()
-            self.mButton.configure(bg="SystemButtonFace")
+            self.mButton.configure(bg="darkgray")
             self.midBool = False
         if self.adBool:
             self.apply_delay(3)
             self.a_sw.restart()
-            self.aButton.configure(bg="SystemButtonFace")
+            self.aButton.configure(bg="darkgray")
             self.adBool = False
         if self.suppBool:
             self.apply_delay(4)
             self.s_sw.restart()
-            self.sButton.configure(bg="SystemButtonFace")
+            self.sButton.configure(bg="darkgray")
             self.suppBool = False
-
-        # here you need to check if self.topBool: etc
-        #                               delayArr[roleindex] = 15, 30, 45, etc
-        # think about 0 / when to reset it
-        # NEW: delete these bottom three and incorporate them into the top 5 here, makes things simpler.
 
     def on_focus(self, event):
         self.add15Button.configure(bg="SystemButtonFace")
         self.add30Button.configure(bg="SystemButtonFace")
         self.add45Button.configure(bg="SystemButtonFace")
+        if self.t_sw.duration == 0.0:
+            self.tButton.configure(bg="SystemButtonFace")
+        if self.j_sw.duration == 0.0:
+            self.jButton.configure(bg="SystemButtonFace")
+        if self.m_sw.duration == 0.0:
+            self.mButton.configure(bg="SystemButtonFace")
+        if self.a_sw.duration == 0.0:
+            self.aButton.configure(bg="SystemButtonFace")
+        if self.s_sw.duration == 0.0:
+            self.sButton.configure(bg="SystemButtonFace")
+
 
     def retrieve_input(self, event):
-        self.rel_inp = int(self.game_timer.get()) - 1
+        self.rel_inp = int(self.game_timer.get())
         self.game_sw.restart()
+
+    def add_new_summ(self, role_index, temp_role, t_role, role_string, role_copied, role_name):
+        temp_role = int(self.game_sw.duration + self.rel_inp - 1 + self.ci_list[role_index].get() - self.delay_list[role_index])
+        if summ_rounder(t_role, temp_role) == '59':
+            role_string = str((temp_role // 60) + 1) + role_name
+        else:
+            role_string = str(temp_role // 60) + summ_rounder(t_role, temp_role) + role_name
+        if role_string[:-1 * len(role_name)] in self.newest_iteration:
+            role_string = role_name
+        self.newest_iteration += role_string
+        role_copied = True
+        return temp_role, t_role, role_string, role_copied, self.newest_iteration
 
 
 if __name__ == '__main__':
 
     root = Tk()
     w = 210
-    h = 360
+    h = 330
     x = (1920/2) - (w/2)
     y = (1080/2) - (h/2)
     root.geometry('%dx%d+%d+%d' % (w, h, x+200, y-100))
     icon = ImageTk.PhotoImage(Image.open("extras/icon.ico"))
     root.iconphoto(False, icon)
-    root.attributes('-alpha', 0.4)
+    root.attributes('-alpha', 0.75)
 
     app = Window(root)
+    app.t_ci.deselect()
+    app.j_ci.deselect()
+    app.m_ci.deselect()
+    app.a_ci.deselect()
+    app.s_ci.deselect()
 
     while True:
         for i in range(len(app.summs_list)):
-            # above you should be able to make temp_top-supp as instance vars and replace the shit down here!
-            # want this to be current timer of array elem + delay inp of array elem  >=  app.flash_timer_list[i] + delay inp of array elem + cosmic insight array values
 
-            # issue HAS to be here i believe, but what is triggering it
             if app.summs_list[i].duration >= app.ci_list[i].get() - app.delay_list[i]:
                 if i == 0:
-                    app.cb_final = app.cb_final.replace(app.top_string, '')
+                    app.cb_final, app.newest_iteration = app.cb_final.replace(app.top_string, ''), \
+                                                         app.newest_iteration.replace(app.top_string, '')
                 if i == 1:
-                    app.cb_final = app.cb_final.replace(app.jg_string, '')
+                    app.cb_final, app.newest_iteration = app.cb_final.replace(app.jg_string, ''), \
+                                                         app.newest_iteration.replace(app.jg_string, '')
                 if i == 2:
-                    app.cb_final = app.cb_final.replace(app.mid_string, '')
+                    app.cb_final, app.newest_iteration = app.cb_final.replace(app.mid_string, ''), \
+                                                         app.newest_iteration.replace(app.mid_string, '')
                 if i == 3:
-                    app.cb_final = app.cb_final.replace(app.ad_string, '')
+                    app.cb_final, app.newest_iteration = app.cb_final.replace(app.ad_string, ''), \
+                                                         app.newest_iteration.replace(app.ad_string, '')
                 if i == 4:
-                    app.cb_final = app.cb_final.replace(app.supp_string, '')
+                    app.cb_final, app.newest_iteration = app.cb_final.replace(app.supp_string, ''), \
+                                                         app.newest_iteration.replace(app.mid_string, '')
                 app.del_summs_scrpt()
                 playsound(app.music_list[i])
                 app.summs_list[i].reset()
 
-            # MAKING SURE THERE IS ONLY ONE OCCURRENCE OF ANY GIVEN SUM IN THE LIST
-            if app.summs_list[i].duration == 0.0 or app.summs_list[i].duration == 300.0:
+            # ALLOWING NEW SUMMS/THOSE THAT HAVE JUST FINISHED TO BE ADDED ONTO THE LIST
+            #print('before potential reset: ', app.a_copied, app.s_copied)
+            if app.summs_list[i].duration == 0.0:
                 if i == 0:
                     app.t_copied = False
                 if i == 1:
@@ -435,65 +482,29 @@ if __name__ == '__main__':
 
             # ADDING NEW SUMMS THAT ARE ON CD TO THE LIST
             if app.summs_list[i].duration > 0.0:
+                # SERIOUSLY look into scoping and try to deeply understand concept behind it + applications
                 if i == 0 and app.t_copied is False:
-                    app.temp_top = int(app.game_sw.duration + app.ci_list[0].get() - app.delay_list[0])
-                    if summ_rounder(app.t_top, app.temp_top) == '59':
-                        app.top_string = str((app.temp_top // 60) + 1) + 'top '
-                    else:
-                        app.top_string = str(app.temp_top // 60) + summ_rounder(app.t_top, app.temp_top) + 'top '
-                    if app.top_string[:-4] in app.cb_final:
-                        app.top_string = 'top '
-                    app.cb_final += app.top_string
-                    app.t_copied = True
-                    app.prnt_scrpt()
-
+                    app.temp_top, app.t_top, app.top_string, app.t_copied, app.newest_iteration = app.add_new_summ(0, app.temp_top, app.t_top, app.top_string, app.t_copied, 'top ')
+                # temp_role, t_role, role_string, role_copied, role_name
                 if i == 1 and app.j_copied is False:
-                    app.temp_jg = int(app.game_sw.duration + app.ci_list[1].get() - app.delay_list[1])
-                    if summ_rounder(app.t_jg, app.temp_jg) == '59':
-                        app.jg_string = str((app.temp_jg // 60) + 1) + 'jg '
-                    else:
-                        app.jg_string = str(app.temp_jg // 60) + summ_rounder(app.t_jg, app.temp_jg) + 'jg '
-                    if app.jg_string[:-3] in app.cb_final:
-                        app.jg_string = 'jg '
-                    app.cb_final += app.jg_string
-                    app.j_copied = True
-                    app.prnt_scrpt()
+                    app.temp_jg, app.t_jg, app.jg_string, app.j_copied, app.newest_iteration = app.add_new_summ(1, app.temp_jg, app.t_jg, app.jg_string, app.j_copied, 'jg ')
 
                 if i == 2 and app.m_copied is False:
-                    app.temp_mid = int(app.game_sw.duration + app.ci_list[2].get() - app.delay_list[2])
-                    if summ_rounder(app.t_mid, app.temp_mid) == '59':
-                        app.mid_string = str((app.temp_mid // 60) + 1) + 'mid '
-                    else:
-                        app.mid_string = str(app.temp_mid // 60) + summ_rounder(app.t_mid, app.temp_mid) + 'mid '
-                    if app.mid_string[:-4] in app.cb_final:
-                        app.mid_string = 'mid '
-                    app.cb_final += app.mid_string
-                    app.m_copied = True
-                    app.prnt_scrpt()
+                    app.temp_mid, app.t_mid, app.mid_string, app.m_copied, app.newest_iteration = app.add_new_summ(2, app.temp_mid, app.t_mid, app.mid_string, app.m_copied, 'mid ')
 
                 if i == 3 and app.a_copied is False:
-                    app.temp_ad = int(app.game_sw.duration + app.ci_list[3].get() - app.delay_list[3])
-                    if summ_rounder(app.t_ad, app.temp_ad) == '59':
-                        app.ad_string = str((app.temp_ad // 60) + 1) + 'ad '
-                    else:
-                        app.ad_string = str(app.temp_ad // 60) + summ_rounder(app.t_ad, app.temp_ad) + 'ad '
-                    if app.ad_string[:-3] in app.cb_final:
-                        app.ad_string = 'ad '
-                    app.cb_final += app.ad_string
-                    app.a_copied = True
-                    app.prnt_scrpt()
+                    app.temp_ad, app.t_ad, app.ad_string, app.a_copied, app.newest_iteration = app.add_new_summ(3, app.temp_ad, app.t_ad, app.ad_string, app.a_copied, 'ad ')
 
                 if i == 4 and app.s_copied is False:
-                    app.temp_supp = int(app.game_sw.duration + app.ci_list[4].get() - app.delay_list[4])
-                    if summ_rounder(app.t_supp, app.temp_supp) == '59':
-                        app.supp_string = str((app.temp_supp // 60) + 1) + 'sup '
-                    else:
-                        app.supp_string = str(app.temp_supp // 60) + summ_rounder(app.t_supp, app.temp_supp) + 'sup '
-                    if app.supp_string[:-4] in app.cb_final:
-                        app.supp_string = 'sup '
-                    app.cb_final += app.supp_string
-                    app.s_copied = True
-                    app.prnt_scrpt()
+                    app.temp_supp, app.t_supp, app.supp_string, app.s_copied, app.newest_iteration = app.add_new_summ(4, app.temp_supp, app.t_supp, app.supp_string, app.s_copied, 'sup ')
+
+                #print(app.newest_iteration)
+
+        # this doesnt work, figure out why 
+
+        if app.newest_iteration != app.cb_final:
+            app.cb_final = app.newest_iteration
+            app.prnt_scrpt()
 
         root.update_idletasks()
         root.update()

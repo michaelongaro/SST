@@ -6,7 +6,7 @@ import pynput.mouse as ms
 from PIL import ImageTk, Image
 import time
 
-# look at event params and if they need to be used + "unused" vars in add_new_summ()
+# "unused" vars in add_new_summ()
 
 
 def summ_rounder(t_var, other):
@@ -99,19 +99,19 @@ class Window(Frame):
 
         # Cosmic Insight Checkbuttons (for each role) + ci icon + placing them on grid
         self.t_ci = Checkbutton(self, variable=self.top_ci, onvalue=285, offvalue=300)
-        self.t_ci.grid(row=0, column=0, pady=(5, 1))
+        self.t_ci.grid(row=0, column=0, pady=(5, 1), padx=1)
         self.j_ci = Checkbutton(self, variable=self.jg_ci, onvalue=285, offvalue=300)
-        self.j_ci.grid(row=1, column=0)
+        self.j_ci.grid(row=1, column=0, padx=1)
         self.m_ci = Checkbutton(self, variable=self.mid_ci, onvalue=285, offvalue=300)
-        self.m_ci.grid(row=2, column=0)
+        self.m_ci.grid(row=2, column=0, padx=1)
         self.a_ci = Checkbutton(self, variable=self.ad_ci, onvalue=285, offvalue=300)
-        self.a_ci.grid(row=3, column=0)
+        self.a_ci.grid(row=3, column=0, padx=1)
         self.s_ci = Checkbutton(self, variable=self.supp_ci, onvalue=285, offvalue=300)
-        self.s_ci.grid(row=4, column=0)
+        self.s_ci.grid(row=4, column=0, padx=1)
 
         self.ci_image = Label(self, image=self.ci_img)
         self.ci_image.image = self.ci_image
-        self.ci_image.grid(row=5, column=0)
+        self.ci_image.grid(row=5, column=0, sticky=W)
 
         # Game Timer label + grid
         self.game_gui_label = Label(self, text="Game Timer:")
@@ -267,6 +267,8 @@ class Window(Frame):
             self.add45Button.configure(bg="SystemButtonFace")
             self.add45Bool = False
 
+    # ========= Any "event" param added below necessary because the function calling it is passing a value =============
+
     # is called whenever focus is lost on window,
     # if summ's button is active, its delay is applied, timer started, button color changed, and boolean reset
     def start_sums(self, event):
@@ -297,7 +299,7 @@ class Window(Frame):
         if self.suppBool:
             self.apply_delay(4)
             self.s_sw.restart()
-            self.sButton.configure(bg="SystemButtonFace")
+            self.sButton.configure(bg="#F0F0F0")
             self.sButton["state"] = "disabled"
             self.suppBool = False
 
@@ -377,7 +379,7 @@ if __name__ == '__main__':
 
     # creating new Tk() object + setting size/location + adding icon
     root = Tk()
-    w = 220
+    w = 230
     h = 330
     x = (1920/2) - (w/2)
     y = (1080/2) - (h/2)
@@ -385,6 +387,11 @@ if __name__ == '__main__':
     icon = ImageTk.PhotoImage(Image.open("extras/icon.ico"))
     root.iconphoto(False, icon)
     root.attributes('-alpha', 0.75)
+
+    def exitProgram(event):
+        root.destroy()
+
+    root.bind("<Escape>", exitProgram)
 
     # tying Tk() object to our Window class above + flushing Checkbutton's states so they are "off"
     app = Window(root)
@@ -452,10 +459,9 @@ if __name__ == '__main__':
         # pushes any changes staged previously in newest_iteration to cb_final
         # also: used to reduce redundancy when adding/deleting multiple flashes at once -> types them out on one line
         if app.newest_iteration != app.cb_final:
-            print('cb: ', app.cb_final, 'newest: ', app.newest_iteration)
             app.cb_final = app.newest_iteration
             app.prnt_scrpt()
 
-        # keeps program up to date while in a loop like this
+        # keeps program up to date while in a loop like this*
         root.update_idletasks()
         root.update()

@@ -388,10 +388,14 @@ if __name__ == '__main__':
     root.iconphoto(False, icon)
     root.attributes('-alpha', 0.75)
 
-    def exitProgram(event):
-        root.destroy()
+    x = True
 
-    root.bind("<Escape>", exitProgram)
+    def update_x():
+        global x
+        x = False
+
+
+    root.protocol("WM_DELETE_WINDOW", update_x)
 
     # tying Tk() object to our Window class above + flushing Checkbutton's states so they are "off"
     app = Window(root)
@@ -402,7 +406,7 @@ if __name__ == '__main__':
     app.s_ci.deselect()
 
     # Cycles constantly while program is running (maybe look at how to reduce memory/cpu usage here)
-    while True:
+    while x:
         for i in range(len(app.summs_list)):
 
             # deletes expired summs from appropriate strings, updates in-game clipboard, plays audio cue, resets timers

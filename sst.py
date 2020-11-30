@@ -6,32 +6,13 @@ import pynput.mouse as ms
 from PIL import ImageTk, Image
 import time
 
-
-# still have issues with how quickly the message is typed, as well as locking out of abilities (typing while chat is
-# not open?)
-# honestly maybe have to scrap the auto-typing aspect if it continues to work like this and just incorporate the
 # cb_final values into the overlay (still to be made)
 # "unused" vars in add_new_summ()
 
-# have input field be able to accept the timer that a flash was pinged at be entered,
-#       and then have that timer (+5 mins) added to the list
-#               have it bypass the summ_rounder (just dont call summ_rounder)
+# think about realistic situations on whether adding +5 to man timers are useful or not
 
-# functionality:
-#       on focusout, check and see if any Entry has valid timers in it
-#                   if so, add 5 to the respective timer (ci included) and put the timer on cd (also grey out button)
+# lets just look at sub 5 min timers for a lil bit, hopefully easy sheet
 
-# CURRENTLY:
-# works fine, but the timer for the exact part is (i think) still being called when normal tiemr is up
-
-
-# Honestly, could just use the entry fields (i think) for displaying real-time sec's left for summ
-# how do to: take (app.ci_list[i].get() - app.exactRoleSecs[i]) - app.summs_list[i].duration to get val
-# inside of on_focus is where you actually put this, maybe if self.role_sw.duration > 0 : <code here>
-# probably easier and cleaner to use a loop here
-
-# maybe need two cases here, one for regular timers (w/ button click) and then one for when you are syncing (checking) for actual game timer vals
-# self.game_sw.duration + self.rel_inp  = the current game timer
 def summ_rounder(t_var, other):
     if 55 <= other % 60 <= 59:
         t_var = '59'
@@ -86,6 +67,7 @@ class Window(Frame):
         self.ad_ci = IntVar(master)
         self.supp_ci = IntVar(master)
 
+        # how many seconds each role's timer is when called
         self.topExactSecs = 0
         self.jgExactSecs = 0
         self.midExactSecs = 0
@@ -128,26 +110,27 @@ class Window(Frame):
         self.sButton.image = self.supp_img
         self.sButton.grid(row=4, column=1, columnspan=3, sticky=W+E, padx=5)
 
+        self.buttonList = [self.tButton, self.jButton, self.mButton, self.aButton, self.sButton]
         # Specific timer(s) for each role (to be entered manually)
 
         self.manTopField = Entry(self, width=10)
-        self.manTopField.insert(END, '0')
+        self.manTopField.insert(END, '')
         self.manTopField.grid(row=0, column=6, columnspan=2, sticky=E, pady=(5, 1))
         self.manJgField = Entry(self, width=10)
-        self.manJgField.insert(END, '0')
+        self.manJgField.insert(END, '')
         self.manJgField.grid(row=1, column=6, columnspan=2, sticky=E, pady=(5, 1))
         self.manMidField = Entry(self, width=10)
-        self.manMidField.insert(END, '0')
+        self.manMidField.insert(END, '')
         self.manMidField.grid(row=2, column=6, columnspan=2, sticky=E, pady=(5, 1))
         self.manAdField = Entry(self, width=10)
-        self.manAdField.insert(END, '0')
+        self.manAdField.insert(END, '')
         self.manAdField.grid(row=3, column=6, columnspan=2, sticky=E, pady=(5, 1))
         self.manSuppField = Entry(self, width=10)
-        self.manSuppField.insert(END, '0')
+        self.manSuppField.insert(END, '')
         self.manSuppField.grid(row=4, column=6, columnspan=2, sticky=E, pady=(5, 1))
 
-        self.delay_list = [int(self.manTopField.get()), int(self.manJgField.get()), int(self.manMidField.get()),
-                           int(self.manAdField.get()), int(self.manSuppField.get())]
+        self.delay_list = [self.manTopField.get(), self.manJgField.get(), self.manMidField.get(),
+                           self.manAdField.get(), self.manSuppField.get()]
         self.entryList = [self.manTopField, self.manJgField, self.manMidField, self.manAdField, self.manSuppField]
 
         # Cosmic Insight Checkbuttons (for each role) + ci icon + placing them on grid
@@ -164,16 +147,16 @@ class Window(Frame):
 
         self.ci_image = Label(self, image=self.ci_img)
         self.ci_image.image = self.ci_image
-        self.ci_image.grid(row=5, column=0, sticky=W)
+        self.ci_image.grid(row=6, column=0, sticky=W)
 
         # Game Timer label + grid
         self.game_gui_label = Label(self, text="Game Timer:")
-        self.game_gui_label.grid(row=5, column=3, ipadx=20)
+        self.game_gui_label.grid(row=6, column=3, ipadx=20)
 
         # Textbox to type in timer offset
         self.game_timer = Entry(self, width=10)
-        self.game_timer.insert(END, '0')
-        self.game_timer.grid(row=5, column=5, columnspan=3, pady=5)
+        self.game_timer.insert(END, '')
+        self.game_timer.grid(row=6, column=5, columnspan=3, pady=10)
         self.game_timer.bind("<Return>", self.retrieve_input)
 
         self.bind('<FocusOut>', self.start_sums)
@@ -223,6 +206,14 @@ class Window(Frame):
         self.a_copied = False
         self.s_copied = False
 
+        self.t_valid = False
+        self.j_valid = False
+        self.m_valid = False
+        self.a_valid = False
+        self.s_valid = False
+
+        self.manValidList = [self.t_valid, self.j_valid, self.m_valid, self.a_valid, self.s_valid]
+
     # ALL 'swtch_foo()' methods are used to toggle state of its respective button. (probably refactor at some point)
     def swtch_top(self):
         if self.topBool:
@@ -269,156 +260,140 @@ class Window(Frame):
     # is called whenever focus is lost on window,
     # if summ's button is active, its delay is applied, timer started, button color changed, and boolean reset
     def start_sums(self, event):
-        # need to use diff variables for this part here or what?
-        # need to add: if entryboxes are NOT disabled, check these vals
-        self.delay_list[0] = int(float(self.manTopField.get()))
-        self.delay_list[1] = int(float(self.manJgField.get()))
-        self.delay_list[2] = int(float(self.manMidField.get()))
-        self.delay_list[3] = int(float(self.manAdField.get()))
-        self.delay_list[4] = int(float(self.manSuppField.get()))
+        # eventually make this so that it will allow the default to be a blank entry field w/o needing 0
+        # pretty low prio tbh
+
+        # ALSO try and get summs to be printed out in order of which comes up first
+
+        # ALSO need to copypasta da mechs to allow game timer to be written as mmss
+
+        # ALSO need to figure out eventually how to get api to figure out whether or not CI is present
+
+
+        # have a lil error handling section here! try and catch, if catch just pass it i believe
+        # maybe need to lookup what the error name was (eeek! that means you will have to willingly let ur code break!)
+        for q in range(len(self.delay_list)):
+
+            try:
+                self.delay_list[q] = int(self.entryList[q].get())
+            except ValueError:
+                self.manValidList[q] = False
+            else:
+                self.manValidList[q] = True
+
+        #self.delay_list[0] = int(self.manTopField.get())
+        #self.delay_list[1] = int(float(self.manJgField.get()))
+        #self.delay_list[2] = int(float(self.manMidField.get()))
+        #self.delay_list[3] = int(float(self.manAdField.get()))
+        #self.delay_list[4] = int(float(self.manSuppField.get()))
 
         if self.topBool:
             self.t_sw.restart()
             self.tButton.configure(bg="SystemButtonFace")
             self.tButton["state"] = "disabled"
             self.topBool = False
-            self.manTopField.delete(0, 'end')
-            self.manTopField.insert(END, 0)
-            self.exactRoleSecs[0] = 0
-        if self.delay_list[0] != 0:
+            self.exactRoleSecs[0] = self.ci_list[0].get()
+        elif self.manValidList[0] and self.t_sw.duration == 0:
             self.t_sw.restart()
             self.tButton.configure(bg="SystemButtonFace")
             self.tButton["state"] = "disabled"
             self.topBool = False
-            self.topExactSecs = self.delay_list[0] % 100 + (self.delay_list[0] // 100) * 60
-            self.manTopField.delete(0, 'end')
-            self.manTopField.insert(END, 0)
-            #self.manTopField.config(background=_from_rgb((245, 59, 59)))
-            self.exactRoleSecs[0] = int(self.game_sw.duration + self.rel_inp) - self.topExactSecs
+            self.exactRoleSecs[0] = int(self.delay_list[0] % 100 + (self.delay_list[0] // 100) * 60)\
+                                 - int(self.game_sw.duration + self.rel_inp)
 
         if self.jgBool:
             self.j_sw.restart()
             self.jButton.configure(bg="SystemButtonFace")
             self.jButton["state"] = "disabled"
             self.jgBool = False
-            self.manJgField.delete(0, 'end')
-            self.manJgField.insert(END, 0)
-            self.exactRoleSecs[1] = 0
-        if self.delay_list[1] != 0:
+            self.exactRoleSecs[1] = self.ci_list[1].get()
+        elif self.manValidList[1] and self.j_sw.duration == 0:
             self.j_sw.restart()
             self.jButton.configure(bg="SystemButtonFace")
             self.jButton["state"] = "disabled"
             self.jgBool = False
-            self.jgExactSecs = self.delay_list[1] % 100 + (self.delay_list[1] // 100) * 60
-            self.manJgField.delete(0, 'end')
-            self.manJgField.insert(END, 0)
-            #self.manJgField.config(background=_from_rgb((245, 59, 59)))
-            self.exactRoleSecs[1] = int(self.game_sw.duration + self.rel_inp) - self.jgExactSecs
+            self.exactRoleSecs[1] = int(self.delay_list[1] % 100 + (self.delay_list[1] // 100) * 60)\
+                                 - int(self.game_sw.duration + self.rel_inp)
 
         if self.midBool:
             self.m_sw.restart()
             self.mButton.configure(bg="SystemButtonFace")
             self.mButton["state"] = "disabled"
             self.midBool = False
-            self.manMidField.delete(0, 'end')
-            self.manMidField.insert(END, 0)
-            self.exactRoleSecs[2] = 0
-        if self.delay_list[2] != 0:
+            self.exactRoleSecs[2] = self.ci_list[2].get()
+        elif self.manValidList[2] and self.m_sw.duration == 0:
             self.m_sw.restart()
             self.mButton.configure(bg="SystemButtonFace")
             self.mButton["state"] = "disabled"
             self.midBool = False
-            self.midExactSecs = self.delay_list[2] % 100 + (self.delay_list[2] // 100) * 60
-            self.manMidField.delete(0, 'end')
-            self.manMidField.insert(END, 0)
-            #self.manMidField.config(background=_from_rgb((245, 59, 59)))
-            self.exactRoleSecs[2] = int(self.game_sw.duration + self.rel_inp) - self.midExactSecs
+            self.exactRoleSecs[2] = int(self.delay_list[2] % 100 + (self.delay_list[2] // 100) * 60)\
+                                 - int(self.game_sw.duration + self.rel_inp)
 
         if self.adBool:
             self.a_sw.restart()
             self.aButton.configure(bg="SystemButtonFace")
             self.aButton["state"] = "disabled"
             self.adBool = False
-            self.manAdField.delete(0, 'end')
-            self.manAdField.insert(END, 0)
-            self.exactRoleSecs[3] = 0
-        if self.delay_list[3] != 0:
+            self.exactRoleSecs[3] = self.ci_list[3].get()
+        elif self.manValidList[3] and self.a_sw.duration == 0:
             self.a_sw.restart()
             self.aButton.configure(bg="SystemButtonFace")
             self.aButton["state"] = "disabled"
             self.adBool = False
-            self.adExactSecs = self.delay_list[3] % 100 + (self.delay_list[3] // 100) * 60
-            self.manAdField.delete(0, 'end')
-            self.manAdField.insert(END, 0)
-            #self.manAdField.config(background=_from_rgb((245, 59, 59)))
-            self.exactRoleSecs[3] = int(self.game_sw.duration + self.rel_inp) - self.adExactSecs
+            self.exactRoleSecs[3] = int(self.delay_list[3] % 100 + (self.delay_list[3] // 100) * 60)\
+                                 - int(self.game_sw.duration + self.rel_inp)
 
         if self.suppBool:
             self.s_sw.restart()
             self.sButton.configure(bg="SystemButtonFace")
             self.sButton["state"] = "disabled"
             self.suppBool = False
-            self.manSuppField.delete(0, 'end')
-            self.manSuppField.insert(END, 0)
-            self.exactRoleSecs[4] = 0
-        if self.delay_list[4] != 0:
+            self.exactRoleSecs[4] = self.ci_list[4].get()
+        elif self.manValidList[4] and self.s_sw.duration == 0:
             self.s_sw.restart()
             self.sButton.configure(bg="SystemButtonFace")
             self.sButton["state"] = "disabled"
             self.suppBool = False
-            self.suppExactSecs = self.delay_list[4] % 100 + (self.delay_list[4] // 100) * 60
-            self.manSuppField.delete(0, 'end')
-            self.manSuppField.insert(END, 0)
-            #self.manSuppField.config(background=_from_rgb((245, 59, 59)))
-            self.exactRoleSecs[4] = int(self.game_sw.duration + self.rel_inp) - self.suppExactSecs
+            self.exactRoleSecs[4] = int(self.delay_list[4] % 100 + (self.delay_list[4] // 100) * 60)\
+                                 - int(self.game_sw.duration + self.rel_inp)
 
     # is called whenever focus is gained on window,
     # flushes delay buttons' and unused/fresh summ's  colors to default,
     def on_focus(self, event):
-        # ABOVE MAYBE: state = disabled
-        # ok, so the disabled thing looks like it removes ability to change background color
-        # then you need to figure out how to have this mesh together with the stuff on line 340, because it is
-        # jacked everytime you tab in/out
-
         for role in range(len(self.summs_list)):
             if self.summs_list[role].duration > 0.0:
                 self.entryList[role].delete(0, 'end')
-                self.entryList[role].insert(0, str((self.ci_list[role].get() - self.exactRoleSecs[role]) - self.summs_list[role].duration))
-                #self.entryList[role]["state"] = "disabled"
-                if ((self.ci_list[role].get() - self.exactRoleSecs[role]) - self.summs_list[role].duration) > 200:
-                    self.entryList[role].config(background=_from_rgb((255, 0, 0)))
-                elif 200 >= ((self.ci_list[role].get() - self.exactRoleSecs[role]) - self.summs_list[role].duration) > 100:
-                    self.entryList[role].config(background=_from_rgb((255, 100, 0)))
-                elif 100 >= ((self.ci_list[role].get() - self.exactRoleSecs[role]) - self.summs_list[role].duration) > 0:
-                    self.entryList[role].config(background=_from_rgb((255, 255, 0)))
-        if self.t_sw.duration == 0.0:
-            self.tButton["state"] = "normal"
-            self.manTopField.config(background=_from_rgb((0, 255, 0)))
-        if self.t_sw.duration == 0.0:
-            self.tButton["state"] = "normal"
-            self.manTopField.config(background=_from_rgb((0, 255, 0)))
-        if self.j_sw.duration == 0.0:
-            self.jButton["state"] = "normal"
-            self.manJgField.config(background=_from_rgb((0, 255, 0)))
-        if self.m_sw.duration == 0.0:
-            self.mButton["state"] = "normal"
-            self.manMidField.config(background=_from_rgb((0, 255, 0)))
-        if self.a_sw.duration == 0.0:
-            self.aButton["state"] = "normal"
-            self.manAdField.config(background=_from_rgb((0, 255, 0)))
-        if self.s_sw.duration == 0.0:
-            self.sButton["state"] = "normal"
-            self.manSuppField.config(background=_from_rgb((0, 255, 0)))
+                self.entryList[role].insert(0, str(int(self.exactRoleSecs[role] - self.summs_list[role].duration)))
 
+                # red
+                if (self.exactRoleSecs[role] - self.summs_list[role].duration) > 200:
+                    self.entryList[role].config(background=_from_rgb((255, 0, 0)))
+                # orange
+                elif 200 >= (self.exactRoleSecs[role] - self.summs_list[role].duration) > 100:
+                    self.entryList[role].config(background=_from_rgb((255, 100, 0)))
+                # yellow
+                elif 100 >= (self.exactRoleSecs[role] - self.summs_list[role].duration) > 0:
+                    self.entryList[role].config(background=_from_rgb((255, 255, 0)))
+
+            #print(self.summs_list[role].duration)
+            ## green(s)
+            #if self.summs_list[role] == 0.0:
+            #    print('reached')
+            #    self.buttonList[role]["state"] = "normal"
+            #    self.entryList[role].config(background=_from_rgb((0, 255, 0)))
+            #    print('reached2')
 
     # called when <Enter> button is pressed -> apply's given offset + starts game timer
     def retrieve_input(self, event):
+        # make this adaptive based off of number of digits
         self.rel_inp = int(self.game_timer.get())
         self.game_sw.restart()
+        print(self.rel_inp)
 
     # generalized method to add any summ
     def add_new_summ(self, role_index, temp_role, t_role, role_string, role_copied, role_name):
-        temp_role = int(self.game_sw.duration + self.rel_inp - 1 + self.ci_list[role_index].get() - self.exactRoleSecs[role_index])
+        temp_role = int(self.game_sw.duration + self.rel_inp - 1 + self.exactRoleSecs[role_index])
+
         if summ_rounder(t_role, temp_role) == '59':
             role_string = str((temp_role // 60) + 1) + role_name
         else:
@@ -498,8 +473,8 @@ if __name__ == '__main__':
         for i in range(len(app.summs_list)):
 
             # deletes expired summs from appropriate strings, updates in-game clipboard, plays audio cue, resets timers
-            # prob need to check first which value is bigger (standard 285/300) or delay_list[i], then follow accord.
-            if app.summs_list[i].duration > app.ci_list[i].get() - app.exactRoleSecs[i]:
+            # and any other miscellaneous values to zero
+            if app.summs_list[i].duration > app.exactRoleSecs[i]:
                 if i == 0:
                     app.newest_iteration = app.newest_iteration.replace(app.top_string, '')
                 if i == 1:
@@ -510,9 +485,16 @@ if __name__ == '__main__':
                     app.newest_iteration = app.newest_iteration.replace(app.ad_string, '')
                 if i == 4:
                     app.newest_iteration = app.newest_iteration.replace(app.supp_string, '')
-                #print(app.summs_list[i].duration, app.exactRoleSecs[i])
+
+                app.entryList[i].delete(0, 'end')
+                app.entryList[i].insert(END, '')
+                app.exactRoleSecs[i] = 0
+
                 playsound(app.music_list[i])
                 app.summs_list[i].reset()
+
+                app.buttonList[i]["state"] = "normal"
+                app.entryList[i].config(background=_from_rgb((255, 255, 255)))
 
             # allowing new summs/those that have just finished to be added onto the list
             if app.summs_list[i].duration == 0.0:
